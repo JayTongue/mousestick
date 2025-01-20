@@ -4,6 +4,9 @@ Justin Tung, 2025
 
 ------------------------------------------
 
+<img src="https://github.com/JayTongue/mousestick/blob/main/exhibits/IMG_4530.jpeg" width="500" /> <img src="https://github.com/JayTongue/mousestick/blob/main/exhibits/IMG_4532.jpeg" width="500" />
+
+
 This is a simple arduino code for using a common 5-pin joystick as a mouse with a RP2040 microcontroller. The joystick I used is a HW-504, but I believe this code can be modified to work with others as well. 
 
 One important thing to pay attention to is whether your joystick takes 3.3v or 5v as input. 
