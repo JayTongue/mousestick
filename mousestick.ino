@@ -8,9 +8,12 @@ int vertZero, horzZero;
 int sensitivity = 50;    // denominator for mouse movement
 int deadZone = 10;       // jitter floor
 bool mouseClickFlag = false;
+bool stickyMouse = false;
 
 unsigned long lastClickTime = 0;
 unsigned long doubleClickThreshold = 250;
+unsigned long tripleClickThreshold = 300;
+int clickCount = 0;
 
 void setup() {
   pinMode(selPin, INPUT_PULLUP);
@@ -24,7 +27,7 @@ void loop() {
   int vertValue = analogRead(vertPin) - vertZero;
   int horzValue = analogRead(horzPin) - horzZero;
 
-  /*
+    /*
   Serial.print("Vert: ");
   Serial.print(vertValue);
   Serial.print(" Horz: ");
@@ -44,18 +47,39 @@ void loop() {
       
       unsigned long currentTime = millis();
       if (currentTime - lastClickTime < doubleClickThreshold) {
-        Mouse.click(MOUSE_RIGHT);
-        // Serial.println("Right Click");
+        clickCount++;
       } else {
-        Mouse.press(MOUSE_LEFT);
-        // Serial.println("Left Click");
+        clickCount = 1; // Reset if the time between clicks is too long
       }
+
       lastClickTime = currentTime;
+
+      if (clickCount == 2) {
+        Mouse.click(MOUSE_RIGHT);
+        //Serial.println("Right Click");
+      } else if (clickCount == 3) {
+        stickyMouse = !stickyMouse;
+        if (stickyMouse) {
+          Mouse.press(MOUSE_LEFT);
+          //Serial.println("Sticky Click On");
+        } else {
+          Mouse.release(MOUSE_LEFT);
+          //Serial.println("Sticky Click Off");
+        }
+        clickCount = 0; // Reset click count after a triple click
+      } else {
+        if (!stickyMouse) {
+          Mouse.press(MOUSE_LEFT);
+          //Serial.println("Left Click");
+        }
+      }
     }
   } else {
     if (mouseClickFlag) {
       mouseClickFlag = false;
-      Mouse.release(MOUSE_LEFT);
+      if (!stickyMouse) {
+        Mouse.release(MOUSE_LEFT);
+      }
     }
   }
 
