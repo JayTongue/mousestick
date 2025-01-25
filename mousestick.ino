@@ -1,4 +1,5 @@
 #include <Mouse.h>
+#include <stdio.h>
 
 int horzPin = 28; // Can use any pin, but it needs to be capable of analog
 int vertPin = 29;
@@ -7,13 +8,12 @@ int selPin = 27;
 int vertZero, horzZero;
 int sensitivity = 50;    // denominator for mouse movement
 int deadZone = 10;       // jitter floor
-bool mouseClickFlag = false;
 bool stickyMouse = false;
+bool lowPin = false;
 
-unsigned long lastClickTime = 0;
-unsigned long doubleClickThreshold = 250;
-unsigned long tripleClickThreshold = 300;
-int clickCount = 0;
+unsigned long clickBack1 = 0; // Previous click time
+unsigned long clickBack2 = 0; // Previous previous click time
+unsigned long clickThreshold = 500;
 
 void setup() {
   pinMode(selPin, INPUT_PULLUP);
@@ -39,49 +39,30 @@ void loop() {
   }
   if (abs(horzValue) > deadZone) {
     Mouse.move(horzValue / sensitivity, 0, 0);
-  }
-
+  } 
   if (digitalRead(selPin) == LOW) {
-    if (!mouseClickFlag) {
-      mouseClickFlag = true;
-      
-      unsigned long currentTime = millis();
-      if (currentTime - lastClickTime < doubleClickThreshold) {
-        clickCount++;
-      } else {
-        clickCount = 1; // Reset if the time between clicks is too long
-      }
+    lowPin = true;
+  } 
+  if (lowPin & digitalRead(selPin) == HIGH) {
+    unsigned long click = millis();
 
-      lastClickTime = currentTime;
-
-      if (clickCount == 2) {
-        Mouse.click(MOUSE_RIGHT);
-        //Serial.println("Right Click");
-      } else if (clickCount == 3) {
-        stickyMouse = !stickyMouse;
-        if (stickyMouse) {
-          Mouse.press(MOUSE_LEFT);
-          //Serial.println("Sticky Click On");
-        } else {
-          Mouse.release(MOUSE_LEFT);
-          //Serial.println("Sticky Click Off");
-        }
-        clickCount = 0; // Reset click count after a triple click
-      } else {
-        if (!stickyMouse) {
-          Mouse.press(MOUSE_LEFT);
-          //Serial.println("Left Click");
-        }
-      }
-    }
-  } else {
-    if (mouseClickFlag) {
-      mouseClickFlag = false;
+    if (click - clickBack2 < clickThreshold) {
+      Mouse.press(MOUSE_LEFT);
+      stickyMouse = true;
+    } else if (click - clickBack1 < clickThreshold & !stickyMouse) {
+      Mouse.click(MOUSE_RIGHT);
+    } else {
       if (!stickyMouse) {
+        Mouse.click(MOUSE_LEFT);
+      } else {
         Mouse.release(MOUSE_LEFT);
+        stickyMouse = false;
       }
     }
-  }
-
+    // Serial.printf("click=%lu clickBack1=%lu clickBack2=%lu\n", click, clickBack1, clickBack2);
+    clickBack2 = clickBack1;
+    clickBack1 = click;
+    lowPin = false;
+    } 
   delay(10);
 }
