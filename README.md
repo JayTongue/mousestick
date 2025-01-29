@@ -13,4 +13,6 @@ One important thing to pay attention to is whether your joystick takes 3.3v or 5
 
 The pin assignment can changed, but keep in mind that the pin on the microcontroller needs to be capable of analog input. 
 
-As currently implemented, a single click is a left click, and a double click is a right click.
+As currently implemented, single click is a left click, double click is a right click, and triple click stickies on left click to mimic click and drag. 
+
+Since the milis() function is stored into an unsigned long, this mouse will have a behavior where every 50 days or so, the number of miliseconds will overflow the alloted data space and reset back to 0. I'm fine with this since you'd have to try to double or triple click in a tiny window exactly over that time period, or make clicks exactly 50ish days apart to catch the window the next time it comes around. Since neither of these are really likely, I'll leave the bug. 
